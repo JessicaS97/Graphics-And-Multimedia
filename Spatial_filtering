@@ -1,0 +1,136 @@
+from imageio import imread
+from matplotlib import pyplot as plt
+import numpy as np
+
+%matplotlib inline
+print('Raw input image.')
+raw_img = np.array(imread('parking.jpg'))
+plt.figure(1)
+plt.imshow(raw_img)
+plt.show()
+
+filters = {}
+# TODO: initialize 3*3 average and sharpen filters as numpy arrays based on
+#       the definition of both filters, you should store
+filters['average'] = np.array([[-1, 0, 1], 
+                                [1, 0, 1],
+                                [0, 0, -1]])
+filters['sharpen'] = np.array([[-1, -1, -1], 
+                                [-1, 9, -1],
+                                [-1, -1, -1]])
+
+def convolution_operation(img, kernel):
+    # Define two helper functions via using nested functions
+    def covolution_helper(neighbour, kernel):
+        # sum of product(element-wise matrix multiplication)
+        return np.sum(np.multiply(neighbour, kernel))
+    def preprocessing_padding_helper(img, kernel_size):
+        pad_size = int(kernel_size / 2)
+        # specify the pading for three dimensions
+        # ((1,1), (1,1), (0,0)) => 1 padding for left and right, 
+        #                          1 padding for top and bottom, 
+        #                          no padding for color channels
+        padding_3_dims = ((pad_size, pad_size), (pad_size, pad_size), (0, 0))
+        img_padded = np.pad(img, padding_3_dims, 'constant', constant_values=0)
+        print('*Padding: FROM ', img.shape,' TO ',img_padded.shape)
+        return img_padded
+    processed_img = np.zeros(img.shape)
+    kernel_size = kernel.shape[0]
+    img_padded = preprocessing_padding_helper(img, kernel_size)
+    # Using 2-for loop to perform matrix operation (updating pixel values)
+    for row_idx in range(processed_img.shape[0]):
+        for col_idx in range(processed_img.shape[1]):
+            
+            try:
+                value = int(img[row_idx][col_idx][0])
+            except:
+                value = Number.parseInt(img[row_idx][col_idx][i])
+            # check contraints
+            if img_padded[row_idx][col_idx][0] < 0 or img_padded[row_idx][col_idx][1] < 0 or img_padded[row_idx][col_idx][2] < 0:
+                        print(".")
+            elif img_padded[row_idx][col_idx][0] > 255 or img_padded[row_idx][col_idx][1] > 255 or img_padded[row_idx][col_idx][2] > 255:
+                        print("...")
+            else:
+                # grab targeting pixel
+                curr_pixel = img_padded[row_idx][col_idx]
+                
+            #    - Fetch Neighbourhood by slicing operation, whose size matching up with the size of kernel
+                neighbourhood = img_padded[row_idx:row_idx+kernel_size, col_idx:col_idx+kernel_size, 0]
+                neighbourhood2 = img_padded[row_idx:row_idx+kernel_size, col_idx:col_idx+kernel_size, 1]
+                neighbourhood3 = img_padded[row_idx:row_idx+kernel_size, col_idx:col_idx+kernel_size, 2]
+                neighbour = [neighbourhood, neighbourhood2, neighbourhood3]
+                new_pixel = covolution_helper(neighbour, kernel)
+            
+            #    - Calculate new pixel value via convolution operation
+                processed_img[row_idx][col_idx] = new_pixel
+            
+    processed_img = np.uint8(processed_img)   # You can comment off this constraint code to see the effects
+    return processed_img
+
+
+'''
+    generate_results function is a helper function for you to generate
+    the output images of lab exercise submission
+    - Function Input: 
+            -            wk:           int, indicates a specific week's lab exercise
+            -          name:           str, the name of the student
+            -           SID:           int, the SID of the student
+            -       raw_img: numpy.ndarray, raw image
+            -   output_imgs:          dict, stores the titles and outputs 
+                                            as keys and values respectively.
+                             i.e. you should store your outputs as {'[task name]':[numpy array],...}
+                             
+            -       channel:           int, the number of color channels
+                             i.e. channel=1 indicates the images are grey images
+                                  channel=3 indicates the images are RGB images
+    - Function Usage:
+            - Supply all the arguments with the correct types and a result image
+              will be generated.
+    - Tips:
+            - You can right click the result image plot to save the image or 
+              you can take a screenshoot for the submission.
+'''
+def generate_results(wk, name, SID, raw_img, output_imgs, channel):
+    img_size = raw_img.shape
+    x = img_size[0]
+    y = img_size[1]
+    
+    # resize input image to a suitable size
+    while x > 10:
+        x /= (x / 10)
+        y /= (y / 10)
+
+    # Generate one axes each for the original image and all output images
+    fig, axs = plt.subplots(1, len(output_imgs)+1, figsize=(x,y))
+    
+    # Plot the original image
+    if channel == 1:
+        axs[0].imshow(raw_img, cmap='gray')
+    elif channel == 3:
+        axs[0].imshow(raw_img)
+    axs[0].text(0.5,-0.1, 'Original Image', size=12, ha="center", transform=axs[0].transAxes)
+    axs[0].axis('off')
+    
+    # Plot each output image
+    tasks = list(output_imgs.keys())
+    for i in range(1,len(tasks)+1):
+        if channel == 1:
+            axs[i].imshow(output_imgs[tasks[i-1]], cmap='gray')
+        elif channel == 3:
+            axs[i].imshow(output_imgs[tasks[i-1]])
+        axs[i].text(0.5,-0.1, tasks[i-1], size=12, ha="center", transform=axs[i].transAxes)
+        axs[i].axis('off')
+
+    fig.suptitle("Week %i Lab Exercise\n %s SID:%i"%(wk, name, SID),x=0.5,y=0.75)
+    plt.tight_layout()
+    plt.show()
+    
+    
+    # Generate filtered results
+avg_img = convolution_operation(raw_img, filters['average'])
+sharpen_img = convolution_operation(raw_img, filters['sharpen']) 
+output_imgs = {'Average Filter': avg_img, 
+               'Sharpen Filter': sharpen_img}
+
+# Now call generate_results() and provide the parameters as required
+generate_results(2, 'Jessica', 460233905, raw_img, output_imgs, 3)
