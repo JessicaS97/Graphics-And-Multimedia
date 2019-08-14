@@ -40,16 +40,17 @@ def convolution_operation(img, kernel):
     # Using 2-for loop to perform matrix operation (updating pixel values)
     for row_idx in range(processed_img.shape[0]):
         for col_idx in range(processed_img.shape[1]):
-            
-            try:
-                value = int(img[row_idx][col_idx][0])
-            except:
-                value = Number.parseInt(img[row_idx][col_idx][i])
-            # check contraints
-            if img_padded[row_idx][col_idx][0] < 0 or img_padded[row_idx][col_idx][1] < 0 or img_padded[row_idx][col_idx][2] < 0:
-                        print(".")
-            elif img_padded[row_idx][col_idx][0] > 255 or img_padded[row_idx][col_idx][1] > 255 or img_padded[row_idx][col_idx][2] > 255:
-                        print("...")
+            for i in range(3):
+                # convert to integer if pixel value not integer 
+                try:
+                    value = int(img[row_idx][col_idx][i])
+                except:
+                    int(img[row_idx][col_idx][i])
+                # if pixel value is not within the range [0, 255], change it to either 0 or 255 accordingly
+                if img_padded[row_idx][col_idx][i] < 0:
+                        img_padded[row_idx][col_idx][i] = 0
+                elif img_padded[row_idx][col_idx][i] > 255:
+                        img_padded[row_idx][col_idx][i] = 255
 
             #    - Fetch Neighbourhood by slicing operation, whose size matching up with the size of kernel
             r = img_padded[row_idx:row_idx+kernel_size, col_idx:col_idx+kernel_size, 0]
@@ -62,14 +63,11 @@ def convolution_operation(img, kernel):
             
             #print("r", r)
             #print("new_r", new_pixelr)
-            
+                        
             #    - Calculate new pixel value via convolution operation
-            processed_img[row_idx][col_idx][0] = new_pixelr
-            processed_img[row_idx][col_idx][1] = new_pixelg
-            processed_img[row_idx][col_idx][2] = new_pixelb
-            
-            #print(processed_img[row_idx][col_idx])
-            
+            processed_img[row_idx][col_idx] = [new_pixelr, new_pixelg, new_pixelb]
+            print(processed_img[row_idx][col_idx])
+                        
     processed_img = np.uint8(processed_img)   # You can comment off this constraint code to see the effects
     return processed_img
 
