@@ -50,19 +50,25 @@ def convolution_operation(img, kernel):
                         print(".")
             elif img_padded[row_idx][col_idx][0] > 255 or img_padded[row_idx][col_idx][1] > 255 or img_padded[row_idx][col_idx][2] > 255:
                         print("...")
-            else:
-                # grab targeting pixel
-                curr_pixel = img_padded[row_idx][col_idx]
-                
+
             #    - Fetch Neighbourhood by slicing operation, whose size matching up with the size of kernel
-                neighbourhood = img_padded[row_idx:row_idx+kernel_size, col_idx:col_idx+kernel_size, 0]
-                neighbourhood2 = img_padded[row_idx:row_idx+kernel_size, col_idx:col_idx+kernel_size, 1]
-                neighbourhood3 = img_padded[row_idx:row_idx+kernel_size, col_idx:col_idx+kernel_size, 2]
-                neighbour = [neighbourhood, neighbourhood2, neighbourhood3]
-                new_pixel = covolution_helper(neighbour, kernel)
+            r = img_padded[row_idx:row_idx+kernel_size, col_idx:col_idx+kernel_size, 0]
+            g = img_padded[row_idx:row_idx+kernel_size, col_idx:col_idx+kernel_size, 1]
+            b = img_padded[row_idx:row_idx+kernel_size, col_idx:col_idx+kernel_size, 2]
+               
+            new_pixelr = covolution_helper(r, kernel)
+            new_pixelg = covolution_helper(g, kernel)
+            new_pixelb = covolution_helper(b, kernel)
+            
+            #print("r", r)
+            #print("new_r", new_pixelr)
             
             #    - Calculate new pixel value via convolution operation
-                processed_img[row_idx][col_idx] = new_pixel
+            processed_img[row_idx][col_idx][0] = new_pixelr
+            processed_img[row_idx][col_idx][1] = new_pixelg
+            processed_img[row_idx][col_idx][2] = new_pixelb
+            
+            #print(processed_img[row_idx][col_idx])
             
     processed_img = np.uint8(processed_img)   # You can comment off this constraint code to see the effects
     return processed_img
