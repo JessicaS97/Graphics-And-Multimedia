@@ -67,7 +67,6 @@ def dilation(binary_img, SE):
     for row_idx in range(height_max):
         for col_idx in range(width_max):
             
-            ################  TODO  ################# 
             # examine the image pixel by pixel to determine
             # which pixels should be included in the dilated result
             
