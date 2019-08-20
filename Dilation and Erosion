@@ -53,9 +53,6 @@ def dilation(binary_img, SE):
         binary_img = binary_img / 255
         
     dilated_img = np.zeros(binary_img.shape)
-    #result_dilated = np.zeros(shape=(binary_img.size, binary_img[0].size))
-    #print(binary_img.size, binary_img[0].size)
-    #print(result_dilated.size, result_dilated[0].size)
     
     SE_size = SE.shape[0]
     radius = int(SE_size / 2)
@@ -67,6 +64,7 @@ def dilation(binary_img, SE):
     for row_idx in range(height_max):
         for col_idx in range(width_max):
             
+            ################  TODO  ################# 
             # examine the image pixel by pixel to determine
             # which pixels should be included in the dilated result
             
@@ -79,14 +77,41 @@ def dilation(binary_img, SE):
             
     return np.array(dilated_img)
 
-# Check the dilation effect against the original image
-dilated_img = dilation(binary_img, se)
-dilation_demo = np.concatenate((binary_img, dilated_img * 255),1)
-print('LEFT: Raw Image    RIGHT: Dilation')
-plt.imshow(dilation_demo, cmap='gray')
-
 boundary = dilated_img * 255 - binary_img
 plt.imshow(boundary, cmap='gray')
+
+def erosion(binary_img, SE):
+    if np.max(binary_img) == 255:
+        binary_img = binary_img / 255
+    eroded_img = np.zeros(binary_img.shape)
+    
+    SE_size = SE.shape[0]
+    radius = int(SE_size / 2)
+
+    height_max, width_max  = binary_img.shape
+    # ignore the 1-pixel-width boundary (or belt) inside the raw_img, by putting constraints on the range.
+    for row_idx in range (radius, height_max):
+        flag = True
+        for col_idx in range (radius, width_max):
+            ################  TODO  ################# 
+            # examine the image pixel by pixel to determine
+            # which pixels should be included in the eroded result
+            for r in range (row_idx-1, row_idx+2):
+                for c in range (col_idx-1, col_idx+2):
+                    if (binary_img[r-1][c-1] != se[(r-1)%3][(c-1)%SE_size]):
+                        break 
+                    # If we have reached the last pixel to check in our SE
+                    # means all our pixels have matched until now
+                    if (c != 0 and r != 0 and (r-1)%SE_size == 0 and (c-1)%SE_size == 0):
+                        eroded_img[row_idx][col_idx] = 255 
+                else:
+                    continue
+                break
+    return np.array(eroded_img)
+
+eroded_img_trick = 1 - dilation(convertWhiteAndBlack(binary_img), se)
+demo_trick = np.concatenate((eroded_img * 255, eroded_img_trick * 255),1)
+plt.imshow(demo_trick, cmap='gray')
 
 '''
     generate_results function is a helper function for you to generate
@@ -147,10 +172,7 @@ def generate_results(wk, name, SID, raw_img, output_imgs, channel):
     
     # Generate morphological processing results
 dilated_img = dilation(binary_img, se) 
-##########################
-#eroded_img = erosion(binary_img, se) 
-##########################
-eroded_img = binary_img
+eroded_img = erosion(binary_img, se) 
 
 # Now call generate_results() and provide the parameters as required
 output_imgs = {'Dilated Image': dilated_img,
