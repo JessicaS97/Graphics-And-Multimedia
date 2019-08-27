@@ -1,0 +1,182 @@
+import sys
+import os
+import cv2
+import numpy as np
+import random
+from matplotlib import pyplot as plt
+path_to_video = 'Quadrangle.mov'
+%matplotlib inline
+
+
+if not os.path.isdir(os.path.join(os.getcwd(), 'background')):
+    os.mkdir("background")
+else:
+    print('background already exists')
+
+if not os.path.isdir(os.path.join(os.getcwd(), 'composite')):
+    os.mkdir("composite")
+else:
+    print('composite already exists')
+
+cap = cv2.VideoCapture('Quadrangle.mov')
+if not cap.isOpened():
+    print('Quadrangle.mov not opened')
+    sys.exit(1)
+length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+frame_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+frame_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+bgctr = 1 # The total number of background frames
+count = 0
+
+bg_height = frame_height
+bg_width = frame_width
+
+# Capture the frames from 'Quadrangle.mov' and store in
+# 'background' folder
+frame_save_path = './background/'
+
+def create_dir_if_not_exists(directory):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+        
+cap = cv2.VideoCapture(path_to_video)
+create_dir_if_not_exists(frame_save_path) # Or you can create it manully
+if not cap.isOpened():
+    print('{} not opened'.format(path_to_video))
+    sys.exit(1)
+time_length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+frame_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+frame_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+count = 0                                             # FRAME_COUNTER
+
+while(1):
+    return_flag, frame = cap.read()  
+    if not return_flag:
+        print('Video Reach End')
+        break
+    # Main Content - Start
+    cv2.imshow('VideoWindowTitle-Quadrangle', frame)
+    cv2.imwrite(frame_save_path + 'frame%d.tif' % count, frame)
+    count += 1
+    # Main Content - End    
+    if cv2.waitKey(30) & 0xff == ord('q'):
+        break
+cap.release()
+cv2.destroyAllWindows()
+
+
+
+BLUE = 120
+bgctr = count
+count = 0
+cap = cv2.VideoCapture('monkey.avi')
+if not cap.isOpened():
+    print('monkey.avi not opened')
+    sys.exit(1)
+length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+frame_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+frame_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+while(1):
+    ret, monkeyframe = cap.read()
+    if not ret:
+        break
+    bg = cv2.imread('background/frame%d.tif' % (count%bgctr))
+    if bg is None:
+        print('ooops! no bg found BG/frame%d.tif' % (count%bgctr))
+        break
+        
+    ## Resize image to monkey's dimensions
+    new_height = (int)(bg_height)
+    new_width = (int)(bg_width)
+    dim = (new_width, new_height)
+    monkeyframe = cv2.resize(monkeyframe, dim)
+    
+    # overwrite the background
+    for x in range(monkeyframe.shape[0]):
+        for y in range(monkeyframe.shape[1]):
+            # replace the corresponding pixels in 'Quadrangle.mov' with 
+             # non-blue pixels in 'monkey.avi'
+            if (monkeyframe[x][y][0] <= BLUE and monkeyframe[x][y][1] <= BLUE and monkeyframe[x][y][2] >= BLUE) or (monkeyframe[x][y][0] < 90 and monkeyframe[x][y][1] < 90 and monkeyframe[x][y][2] < 90):
+                    bg[x][y] = monkeyframe[x][y]
+    cv2.imwrite('composite/composite%d.tif' % count, bg)
+    cv2.putText(img=bg, text='Compositing: %d%%' % int(100*count/length), org=(int(0), int(bg.shape[1] / 2)),
+                fontFace=cv2.FONT_HERSHEY_DUPLEX, fontScale=0.7,
+                color=(0, 255, 0))
+    cv2.imshow('Monkey in Quadrangle', bg)
+
+    count += 1
+    if cv2.waitKey(30) & 0xff == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
+
+
+# Read the composited frames from 'composite' folder
+# and covert them into a single output video
+
+
+frame_load_path = './composite/'
+path_to_output_video = './new_video.mov'
+
+out = cv2.VideoWriter(path_to_output_video, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10, (int(frame_width), int(frame_height)))
+frame_counter = 0
+while(1):
+    img = cv2.imread(frame_load_path + 'frame%d.tif' % frame_counter)
+    if img is None:
+        print('No more frames to be loaded')
+        break;
+    out.write(img)
+    frame_counter += 1
+out.release()
+cv2.destroyAllWindows()
+
+
+def generate_results(output_video):
+    cap = cv2.VideoCapture(path_to_output_video)
+    random_frames = []
+    if not cap.isOpened():
+        print('%s not opened' % output_video.split('/')[-1])
+        sys.exit(1)
+
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    x = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+    y = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+    while x > 10:
+        x /= (x / 10)
+        y /= (y / 10)
+    
+    for i in range(3):
+        random_frames.append(random.randint(1, frame_count))
+        
+    fig, axs = plt.subplots(1, 3, figsize=(x,y))
+        
+    count = 0
+    output_count = 0
+    while(1):
+        ret, frame = cap.read()
+        if not ret:
+            break
+        if count in random_frames:
+            frame_m = frame.copy()
+            frame_R = frame[:,:,2]
+            frame_B = frame[:,:,0]
+            frame_m[:,:,2] = frame_B
+            frame_m[:,:,0] = frame_R
+            frame = np.uint8(frame_m)
+
+            axs[output_count].imshow(frame_m)
+            axs[output_count].text(0.5,-0.1, 'Composite frame: ' + str(count), size=12, ha="center", transform=axs[output_count].transAxes)
+            axs[output_count].axis('off')
+            output_count+=1
+            
+            if output_count >= 3:
+                break
+        count+=1
+
+    #cap.release()
+    #cv2.destroyAllWindows()
+    plt.tight_layout()
+    plt.show()
+    
+
