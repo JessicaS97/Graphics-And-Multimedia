@@ -30,6 +30,7 @@ count = 0
 
 bg_height = frame_height
 bg_width = frame_width
+bg_length = length
 
 # Capture the frames from 'Quadrangle.mov' and store in
 # 'background' folder
@@ -55,7 +56,7 @@ while(1):
         print('Video Reach End')
         break
     # Main Content - Start
-    cv2.imshow('VideoWindowTitle-Quadrangle', frame)
+    #cv2.imshow('VideoWindowTitle-Quadrangle', frame)
     cv2.imwrite(frame_save_path + 'frame%d.tif' % count, frame)
     count += 1
     # Main Content - End    
@@ -102,7 +103,7 @@ while(1):
     cv2.putText(img=bg, text='Compositing: %d%%' % int(100*count/length), org=(int(0), int(bg.shape[1] / 2)),
                 fontFace=cv2.FONT_HERSHEY_DUPLEX, fontScale=0.7,
                 color=(0, 255, 0))
-    cv2.imshow('Monkey in Quadrangle', bg)
+    #cv2.imshow('Monkey in Quadrangle', bg)
 
     count += 1
     if cv2.waitKey(30) & 0xff == ord('q'):
@@ -115,25 +116,32 @@ cv2.destroyAllWindows()
 # Read the composited frames from 'composite' folder
 # and covert them into a single output video
 
+if length < bg_length:
+    short = length
+else:
+    short = bg_length
 
 frame_load_path = './composite/'
 path_to_output_video = './new_video.mov'
 
-out = cv2.VideoWriter(path_to_output_video, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10, (int(frame_width), int(frame_height)))
+out = cv2.VideoWriter(path_to_output_video, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10, (int(new_width), int(new_height)))
 frame_counter = 0
 while(1):
-    img = cv2.imread(frame_load_path + 'frame%d.tif' % frame_counter)
+    img = cv2.imread(frame_load_path + 'composite%d.tif' % frame_counter)
+    print(frame_counter)
     if img is None:
         print('No more frames to be loaded')
         break;
     out.write(img)
     frame_counter += 1
+    if short == frame_counter:
+        break;
 out.release()
 cv2.destroyAllWindows()
 
 
-def generate_results(output_video):
-    cap = cv2.VideoCapture(path_to_output_video)
+def generate_results(wk, name, SID, output_video):
+    cap = cv2.VideoCapture(output_video)
     random_frames = []
     if not cap.isOpened():
         print('%s not opened' % output_video.split('/')[-1])
@@ -176,7 +184,12 @@ def generate_results(output_video):
 
     #cap.release()
     #cv2.destroyAllWindows()
+    fig.suptitle("Week %i Lab Exercise\n %s SID:%i"%(wk, name, SID),x=0.5,y=0.75)
     plt.tight_layout()
     plt.show()
     
-
+    
+    
+# Change the 'path_to_output' to the path where your composited video is located
+path_to_output = './new_video.mov'
+generate_results(4, 'Jessica Johanna Sun', 460233905, path_to_output_video)
